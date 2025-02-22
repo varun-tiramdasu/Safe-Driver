@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: slideshow 15s infinite;
+            background-repeat: no-repeat;
+            background-image: url("{{ url_for('static', filename='pht2.jpg') }}");
+            background-size: cover;
+            background-position: center;
+        }
+        @keyframes slideshow {
+    0% { background-image: url('/static/otp1.jpeg'); opacity: 1; }
+    33% { background-image: url('/static/otp2.jpeg'); opacity: 0.8;}
+    66% { background-image: url('/static/opt3.jpg'); opacity: 0.8; }
+    100% { background-image: url('/static/signup4.jpg'); opacity: 0.8;}
+}
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .navbar {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        .navbar .logo {
+            font-size: 1.8rem;
+            color: #2980b9;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .profile-btn-container {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            background: linear-gradient(to right, #3498db, #1abc9c);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s ease, transform 0.2s;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: linear-gradient(to right, #1abc9c, #3498db);
+            transform: scale(1.05);
+        }
+
+        .btn.logout-btn {
+            background-color: white;
+            color: #dcedf8;
+        }
+
+        .btn.logout-btn:hover {
+            background-color: #f1f1f1;
+            color: #3498db;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 600px;
+            margin: 100px auto 30px;
+            padding: 30px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            color: #2980b9;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .profile-info {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .profile-info .field {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .chart-container {
+            width: 90%;
+            max-width: 600px;
+            margin-bottom: 50px;
+            position: relative;
+            z-index: 1;
+        }
+
+        canvas {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                width: 90%;
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="/" class="logo">Home</a>
+        <div class="profile-btn-container">
+            <a href="/" class="btn">Home</a>
+            <a href="{{ url_for('edit_profile') }}" class="btn">Edit Profile</a>
+            <a href="/logout" class="btn logout-btn">Logout</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Welcome, {{ user.name }}</h1>
+        <div class="profile-info">
+            <div class="field"><label>Email:</label><span>{{ user.email }}</span></div>
+            <div class="field"><label>Phone Number:</label><span>{{ user.phone_number }}</span></div>
+            <div class="field"><label>License Number:</label><span>{{ user.license_number }}</span></div>
+            <div class="field"><label>Vehicle Number:</label><span>{{ user.vehicle_number }}</span></div>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <h2>Activity Chart</h2>
+        <canvas id="activityChart"></canvas>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const ctx = document.getElementById('activityChart').getContext('2d');
+            const labels = JSON.parse('{{ user.day | tojson | safe }}');
+            const data = JSON.parse('{{ user.count | tojson | safe }}');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Activity Count',
+                        data: data,
+                        backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { title: { display: true, text: 'Days' } },
+                        y: { beginAtZero: true, title: { display: true, text: 'Count' } }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
